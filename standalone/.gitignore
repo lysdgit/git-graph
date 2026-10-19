@@ -1,0 +1,5 @@
+data/
+.testrepo/
+node_modules/
+out/
+*.log

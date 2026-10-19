@@ -1,0 +1,59 @@
+/*
+ * Theme variables for the standalone app.
+ *
+ * Git Graph's stylesheets are written against VS Code's CSS variables. Outside of VS Code those
+ * variables don't exist, so they are defined here using the "Light+" palette.
+ */
+:root {
+	--vscode-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+	--vscode-editor-background: #ffffff;
+	--vscode-editor-foreground: #333333;
+	--vscode-editorWidget-background: #f3f3f3;
+	--vscode-editorSuggestWidget-foreground: #333333;
+	--vscode-editor-findMatchHighlightBorder: #a8ac94;
+	--vscode-menu-background: #ffffff;
+	--vscode-menu-foreground: #333333;
+	--vscode-menu-border: #cecece;
+	--vscode-menu-selectionBackground: #0060c0;
+	--vscode-menu-selectionForeground: #ffffff;
+	--vscode-menu-selectionBorder: transparent;
+	--vscode-menu-separatorBackground: #d4d4d4;
+	--vscode-widget-shadow: rgba(0, 0, 0, 0.16);
+	--vscode-scrollbar-shadow: rgba(0, 0, 0, 0.16);
+	--vscode-focusBorder: #0090f1;
+	--vscode-input-background: #ffffff;
+	--vscode-input-foreground: #333333;
+	--vscode-input-placeholderForeground: #767676;
+	--vscode-inputOption-activeBorder: #007acc;
+	--vscode-inputOption-activeBackground: rgba(14, 99, 156, 0.2);
+	--vscode-inputValidation-errorBackground: #f2dede;
+	--vscode-inputValidation-errorBorder: #be1100;
+	--vscode-gitDecoration-addedResourceForeground: #587c0c;
+	--vscode-gitDecoration-modifiedResourceForeground: #895503;
+	--vscode-gitDecoration-deletedResourceForeground: #ad0707;
+	--vscode-selection-background: #add6ff;
+	--vscode-textLink-foreground: #006ab1;
+	--vscode-textLink-activeForeground: #006ab1;
+}
+
+html,
+body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	background-color: var(--vscode-editor-background);
+	color: var(--vscode-editor-foreground);
+	font-family: var(--vscode-font-family);
+}
+
+/* Keep the graph area filling the browser window. */
+#view {
+	height: 100vh;
+}
+
+::selection {
+	background-color: var(--vscode-selection-background);
+}

@@ -1,0 +1,38 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es2019",
+		"lib": [
+			"es2019"
+		],
+		"outDir": "./out",
+		"rootDir": "..",
+		"declaration": true,
+		"baseUrl": ".",
+		"paths": {
+			"iconv-lite": [
+				"node_modules/iconv-lite"
+			]
+		},
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"removeComments": true,
+		"sourceMap": true,
+		"strict": true,
+		"types": [
+			"node",
+			"vscode"
+		]
+	},
+	"include": [
+		"../src/**/*.ts",
+		"./src/**/*.ts"
+	],
+	"exclude": [
+		"../src/life-cycle/**",
+		"../src/extension.ts"
+	]
+}

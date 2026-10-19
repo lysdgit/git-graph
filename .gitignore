@@ -1,0 +1,12 @@
+coverage
+media
+node_modules
+out
+*.vsix
+
+# Git Graph Standalone runtime data: settings, memento state, logs.
+# Holds absolute local paths, so it must never be committed.
+standalone/data
+
+# WorkBuddy project notes / agent metadata
+.workbuddy

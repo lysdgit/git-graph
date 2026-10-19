@@ -1,0 +1,61 @@
+name: Build Git Graph Standalone
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install build dependencies
+        working-directory: standalone
+        run: npm ci || npm install
+
+      - name: Build
+        working-directory: standalone
+        run: npm run build
+
+      - name: Assemble package
+        run: |
+          set -euo pipefail
+          APP=dist/git-graph-standalone
+          mkdir -p "$APP"
+          cp package.json LICENSE README.md "$APP/"
+          cp -r media resources "$APP/"
+          mkdir -p "$APP/standalone"
+          cp standalone/package.json standalone/package-lock.json "$APP/standalone/"
+          cp -r standalone/out "$APP/standalone/"
+          cp standalone/packaging/start.bat standalone/packaging/start.sh "$APP/"
+          chmod +x "$APP/start.sh"
+          # Runtime dependencies only (iconv-lite, ws) - no build tooling in the package
+          (cd "$APP/standalone" && npm ci --omit=dev --no-audit --no-fund)
+
+      - name: Create archive
+        run: |
+          set -euo pipefail
+          cd dist
+          zip -qr "git-graph-standalone-${{ github.ref_name }}.zip" git-graph-standalone
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: git-graph-standalone-${{ github.ref_name }}
+          path: dist/*.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
