@@ -1,5 +1,8 @@
 # Change Log
 
+> 以下 `1.30.0` 及更早的记录来自上游项目 [mhutchie/vscode-git-graph](https://github.com/mhutchie/vscode-git-graph)，对应 VS Code 插件的历史版本。
+> 本仓库的独立版（`standalone/`）改动不在此文件中维护，请查看提交记录与 [README](README.md)。
+
 ## 1.30.0 - 2021-04-05
 * #395 Added a "Force Fetch" option onto the "Fetch into Local Branch" Dialog, allowing any local branch (that's not checked out) to be reset to the remote branch. This dialog is accessed via the Remote Branch Context Menu.
 * #457 New "View Diff with Working File" action on the File Context Menu in the Commit Details View.

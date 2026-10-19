@@ -1,174 +1,296 @@
-# Git Graph extension for Visual Studio Code
+# Git Graph 独立版
 
-View a Git Graph of your repository, and easily perform Git actions from the graph. Configurable to look the way you want!
+把 [Git Graph](https://github.com/mhutchie/vscode-git-graph) 从 VS Code 插件改造成**独立运行的本地应用**：一个 Node 服务 + 浏览器界面。不需要安装 VS Code，也不需要 Electron。
 
-![Recording of Git Graph](https://github.com/mhutchie/vscode-git-graph/raw/master/resources/demo.gif)
+启动后打开 `http://127.0.0.1:7583`，就能看到完整的提交图谱、点开提交查看改动、右键执行 Git 操作。
 
-## Features
+> 原项目的 `src/`（数据层与业务逻辑）和 `web/`（前端）**没有任何改动**，本仓库通过 `standalone/src/adapter/` 顶替 `vscode` 模块，让同一份业务代码跑在普通 Node 进程里。
 
-* Git Graph View:
-    * Display:
-        * Local & Remote Branches
-        * Local Refs: Heads, Tags & Remotes
-        * Uncommitted Changes
-    * Perform Git Actions (available by right clicking on a commit / branch / tag):
-        * Create, Checkout, Delete, Fetch, Merge, Pull, Push, Rebase, Rename & Reset Branches
-        * Add, Delete & Push Tags
-        * Checkout, Cherry Pick, Drop, Merge & Revert Commits
-        * Clean, Reset & Stash Uncommitted Changes
-        * Apply, Create Branch From, Drop & Pop Stashes
-        * View annotated tag details (name, email, date and message)
-        * Copy commit hashes, and branch, stash & tag names to the clipboard
-    * View commit details and file changes by clicking on a commit. On the Commit Details View you can:
-        * View the Visual Studio Code Diff of any file change by clicking on it.
-        * Open the current version of any file that was affected in the commit.
-        * Copy the path of any file that was affected in the commit to the clipboard.
-        * Click on any HTTP/HTTPS url in the commit body to open it in your default web browser.
-    * Compare any two commits by clicking on a commit, and then CTRL/CMD clicking on another commit. On the Commit Comparison View you can:
-        * View the Visual Studio Code Diff of any file change between the selected commits by clicking on it.
-        * Open the current version of any file that was affected between the selected commits.
-        * Copy the path of any file that was affected between the selected commits to the clipboard.
-    * Code Review - Keep track of which files you have reviewed in the Commit Details & Comparison Views.
-        * Code Review's can be performed on any commit, or between any two commits (not on Uncommitted Changes).
-        * When a Code Review is started, all files needing to be reviewed are bolded. When you view the diff / open a file, it will then be un-bolded.
-        * Code Reviews persist across Visual Studio Code sessions. They are automatically closed after 90 days of inactivity.
-    * View uncommitted changes, and compare the uncommitted changes with any commit.
-    * Hover over any commit vertex on the graph to see a tooltip indicating:
-        * Whether the commit is included in the HEAD.
-        * Which branches, tags and stashes include the commit. 
-    * Filter the branches shown in Git Graph using the 'Branches' dropdown menu. The options for filtering the branches are:
-        * Show All branches
-        * Select one or more branches to be viewed
-        * Select from a user predefined array of custom glob patterns (by setting `git-graph.customBranchGlobPatterns`)
-    * Fetch from Remote(s) _(available on the top control bar)_
-    * Find Widget allows you to quickly find one or more commits containing a specific phrase (in the commit message / date / author / hash, branch or tag names).
-    * Repository Settings Widget:
-        * Allows you to view, add, edit, delete, fetch & prune remotes of the repository.
-        * Configure "Issue Linking" - Converts issue numbers in commit messages into hyperlinks, that open the issue in your issue tracking system.
-        * Configure "Pull Request Creation" - Automates the opening and pre-filling of a Pull Request form, directly from a branches context menu.
-            * Support for the publicly hosted Bitbucket, GitHub and GitLab Pull Request providers is built-in.
-            * Custom Pull Request providers can be configured using the Extension Setting `git-graph.customPullRequestProviders` (e.g. for use with privately hosted Pull Request providers). Information on how to configure custom providers is available [here](https://github.com/mhutchie/vscode-git-graph/wiki/Configuring-a-custom-Pull-Request-Provider).
-        * Export your Git Graph Repository Configuration to a file that can be committed in the repository. It allows others working in the same repository to automatically use the same Git Graph configuration.
-    * Keyboard Shortcuts (available in the Git Graph View):
-        * `CTRL/CMD + F`: Open the Find Widget.
-        * `CTRL/CMD + H`: Scrolls the Git Graph View to be centered on the commit referenced by HEAD.
-        * `CTRL/CMD + R`: Refresh the Git Graph View.
-        * `CTRL/CMD + S`: Scrolls the Git Graph View to the first (or next) stash in the loaded commits.
-        * `CTRL/CMD + SHIFT + S`: Scrolls the Git Graph View to the last (or previous) stash in the loaded commits.
-        * When the Commit Details View is open on a commit:
-            * `Up` / `Down`: The Commit Details View will be opened on the commit directly above or below it on the Git Graph View.
-            * `CTRL/CMD + Up` / `CTRL/CMD + Down`: The Commit Details View will be opened on its child or parent commit on the same branch.
-                * If the Shift Key is also pressed (i.e. `CTRL/CMD + SHIFT + Up` / `CTRL/CMD + SHIFT + Down`), when branches or merges are encountered the alternative branch is followed.
-        * `Enter`: If a dialog is open, pressing enter submits the dialog, taking the primary (left) action.
-        * `Escape`: Closes the active dialog, context menu or the Commit Details View.
-    * Resize the width of each column, and show/hide the Date, Author & Commit columns.
-    * Common Emoji Shortcodes are automatically replaced with the corresponding emoji in commit messages (including all [gitmoji](https://gitmoji.carloscuesta.me/)). Custom Emoji Shortcode mappings can be defined in `git-graph.customEmojiShortcodeMappings`.
-* A broad range of configurable settings (e.g. graph style, branch colours, and more...). See the 'Extension Settings' section below for more information.
-* "Git Graph" launch button in the Status Bar
-* "Git Graph: View Git Graph" launch command in the Command Palette
+## 目录
 
-## Extension Settings
+- [功能](#功能)
+- [工作原理](#工作原理)
+- [快速开始](#快速开始)
+- [仓库管理](#仓库管理)
+- [命令行参数](#命令行参数)
+- [配置文件](#配置文件)
+- [查看文件差异](#查看文件差异)
+- [构建与发版](#构建与发版)
+- [目录结构](#目录结构)
+- [已知限制](#已知限制)
+- [常见问题](#常见问题)
+- [许可与致谢](#许可与致谢)
 
-Detailed information of all Git Graph settings is available [here](https://github.com/mhutchie/vscode-git-graph/wiki/Extension-Settings), including: descriptions, screenshots, default values and types.
+## 功能
 
-A summary of the Git Graph extension settings are:
-* **Commit Details View**:
-    * **Auto Center**: Automatically center the Commit Details View when it is opened.
-    * **File View**:
-        * **File Tree**:
-            * **Compact Folders**: Render the File Tree in the Commit Details View in a compacted form, such that folders with a single child folder are compressed into a single combined folder element.
-        * **Type**: Sets the default type of File View used in the Commit Details View.
-    * **Location**: Specifies where the Commit Details View is rendered in the Git Graph View.
-* **Context Menu Actions Visibility**: Customise which context menu actions are visible. For more information, see the documentation [here](https://github.com/mhutchie/vscode-git-graph/wiki/Extension-Settings#context-menu-actions-visibility).
-* **Custom Branch Glob Patterns**: An array of Custom Glob Patterns to be shown in the "Branches" dropdown. Example: `[{"name":"Feature Requests", "glob":"heads/feature/*"}]`
-* **Custom Emoji Shortcode Mappings**: An array of custom Emoji Shortcode mappings. Example: `[{"shortcode": ":sparkles:", "emoji":"✨"}]`
-* **Custom Pull Request Providers**: An array of custom Pull Request providers that can be used in the "Pull Request Creation" Integration. For information on how to configure this setting, see the documentation [here](https://github.com/mhutchie/vscode-git-graph/wiki/Configuring-a-custom-Pull-Request-Provider).
-* **Date**:
-    * **Format**: Specifies the date format to be used in the "Date" column on the Git Graph View.
-    * **Type**: Specifies the date type to be displayed in the "Date" column on the Git Graph View, either the author or commit date.
-* **Default Column Visibility**: An object specifying the default visibility of the Date, Author & Commit columns. Example: `{"Date": true, "Author": true, "Commit": true}`
-* **Dialog > \***: Set the default options on the following dialogs: Add Tag, Apply Stash, Cherry Pick, Create Branch, Delete Branch, Fetch into Local Branch, Fetch Remote, Merge, Pop Stash, Pull Branch, Rebase, Reset, and Stash Uncommitted Changes
-* **Enhanced Accessibility**: Visual file change A|M|D|R|U indicators in the Commit Details View for users with colour blindness. In the future, this setting will enable any additional accessibility related features of Git Graph that aren't enabled by default.
-* **File Encoding**: The character set encoding used when retrieving a specific version of repository files (e.g. in the Diff View). A list of all supported encodings can be found [here](https://github.com/ashtuchkin/iconv-lite/wiki/Supported-Encodings).
-* **Graph**:
-    * **Colours**: Specifies the colours used on the graph.
-    * **Style**: Specifies the style of the graph.
-    * **Uncommitted Changes**: Specifies how the Uncommitted Changes are displayed on the graph.
-* **Integrated Terminal Shell**: Specifies the path and filename of the Shell executable to be used by the Visual Studio Code Integrated Terminal, when it is opened by Git Graph.
-* **Keyboard Shortcut > \***: Configures the keybindings used for all keyboard shortcuts in the Git Graph View.
-* **Markdown**: Parse and render a frequently used subset of inline Markdown formatting rules in commit messages and tag details (bold, italics, bold & italics, and inline code blocks).
-* **Max Depth Of Repo Search**: Specifies the maximum depth of subfolders to search when discovering repositories in the workspace.
-* **Open New Tab Editor Group**: Specifies the Editor Group where Git Graph should open new tabs, when performing the following actions from the Git Graph View: Viewing the Visual Studio Code Diff View, Opening a File, Viewing a File at a Specific Revision.
-* **Open to the Repo of the Active Text Editor Document**: Open the Git Graph View to the repository containing the active Text Editor document.
-* **Reference Labels**:
-    * **Alignment**: Specifies how branch and tag reference labels are aligned for each commit.
-    * **Combine Local and Remote Branch Labels**: Combine local and remote branch labels if they refer to the same branch, and are on the same commit.
-* **Repository**:
-    * **Commits**:
-        * **Fetch Avatars**: Fetch avatars of commit authors and committers.
-        * **Initial Load**: Specifies the number of commits to initially load.
-        * **Load More**: Specifies the number of additional commits to load when the "Load More Commits" button is pressed, or more commits are automatically loaded.
-        * **Load More Automatically**: When the view has been scrolled to the bottom, automatically load more commits if they exist (instead of having to press the "Load More Commits" button).
-        * **Mute**:
-            * **Commits that are not ancestors of HEAD**: Display commits that aren't ancestors of the checked-out branch / commit with a muted text color.
-            * **Merge Commits**: Display merge commits with a muted text color.
-        * **Order**: Specifies the order of commits on the Git Graph View. See [git log](https://git-scm.com/docs/git-log#_commit_ordering) for more information on each order option.
-        * **Show Signature Status**: Show the commit's signature status to the right of the Committer in the Commit Details View (only for signed commits). Hovering over the signature icon displays a tooltip with the signature details.
-    * **Fetch and Prune**: Before fetching from remote(s) using the Fetch button on the Git Graph View Control Bar, remove any remote-tracking references that no longer exist on the remote(s).
-    * **Fetch And Prune Tags**: Before fetching from remote(s) using the Fetch button on the Git Graph View Control Bar, remove any local tags that no longer exist on the remote(s).
-    * **Include Commits Mentioned By Reflogs**: Include commits only mentioned by reflogs in the Git Graph View (only applies when showing all branches).
-    * **On Load**:
-        * **Scroll To Head**: Automatically scroll the Git Graph View to be centered on the commit referenced by HEAD.
-        * **Show Checked Out Branch**: Show the checked out branch when a repository is loaded in the Git Graph View.
-        * **Show Specific Branches**: Show specific branches when a repository is loaded in the Git Graph View.
-    * **Only Follow First Parent**: Only follow the first parent of commits when discovering the commits to load in the Git Graph View. See [--first-parent](https://git-scm.com/docs/git-log#Documentation/git-log.txt---first-parent) to find out more about this setting.
-    * **Show Commits Only Referenced By Tags**: Show Commits that are only referenced by tags in Git Graph.
-    * **Show Remote Branches**: Show Remote Branches in Git Graph by default.
-    * **Show Remote Heads**: Show Remote HEAD Symbolic References in Git Graph.
-    * **Show Stashes**: Show Stashes in Git Graph by default.
-    * **Show Tags**: Show Tags in Git Graph by default.
-    * **Show Uncommitted Changes**: Show uncommitted changes. If you work on large repositories, disabling this setting can reduce the load time of the Git Graph View.
-    * **Show Untracked Files**: Show untracked files when viewing the uncommitted changes. If you work on large repositories, disabling this setting can reduce the load time of the Git Graph View.
-    * **Sign**:
-        * **Commits**: Enables commit signing with GPG or X.509.
-        * **Tags**: Enables tag signing with GPG or X.509.
-    * **Use Mailmap**: Respect [.mailmap](https://git-scm.com/docs/git-check-mailmap#_mapping_authors) files when displaying author & committer names and email addresses.
-* **Repository Dropdown Order**: Specifies the order that repositories are sorted in the repository dropdown on the Git Graph View (only visible when more than one repository exists in the current Visual Studio Code Workspace).
-* **Retain Context When Hidden**: Specifies if the Git Graph view Visual Studio Code context is kept when the panel is no longer visible (e.g. moved to background tab). Enabling this setting will make Git Graph load significantly faster when switching back to the Git Graph tab, however has a higher memory overhead.
-* **Show Status Bar Item**: Show a Status Bar Item that opens the Git Graph View when clicked.
-* **Source Code Provider Integration Location**: Specifies where the "View Git Graph" action appears on the title of SCM Providers.
-* **Tab Icon Colour Theme**: Specifies the colour theme of the icon displayed on the Git Graph tab.
+### 图谱视图
 
-This extension consumes the following settings:
+- 显示本地分支、远程分支、Tags、Stashes 与未提交的改动
+- 每个提交顶点都带悬停提示：是否在 HEAD 中、被哪些分支 / 标签 / Stash 引用
+- 按分支过滤：全部、勾选若干分支、或使用自定义 glob 模式（`git-graph.customBranchGlobPatterns`）
+- 查找组件：在提交信息、日期、作者、哈希、分支与标签名中搜索
+- 列宽可拖动，Date / Author / Commit 列可显示或隐藏
+- 提交信息里的 Emoji 短码（含全部 [gitmoji](https://gitmoji.carloscuesta.me/)）自动替换成对应字符
 
-* `git.path`: Specifies the path and filename of a portable Git installation.
+### Git 操作
 
-## Extension Commands
+在提交、分支、标签、Stash 上右键即可执行：
 
-This extension contributes the following commands:
+| 对象 | 支持的操作 |
+|---|---|
+| 分支 | 创建、检出、删除、抓取、合并、拉取、推送、变基、重命名、重置 |
+| 标签 | 添加、删除、推送 |
+| 提交 | 检出、拣选、丢弃、合并、还原 |
+| Stash | 应用、从 Stash 创建分支、丢弃、弹出 |
+| 未提交的改动 | 清理、重置、暂存（Stash） |
 
-* `git-graph.view`: Git Graph: View Git Graph
-* `git-graph.addGitRepository`: Git Graph: Add Git Repository... _(used to add sub-repos to Git Graph)_
-* `git-graph.clearAvatarCache`: Git Graph: Clear Avatar Cache
-* `git-graph.endAllWorkspaceCodeReviews`: Git Graph: End All Code Reviews in Workspace
-* `git-graph.endSpecificWorkspaceCodeReview`: Git Graph: End a specific Code Review in Workspace... _(used to end a specific Code Review without having to first open it in the Git Graph View)_
-* `git-graph.fetch`: Git Graph: Fetch from Remote(s) _(used to open the Git Graph View and immediately run "Fetch from Remote(s)")_
-* `git-graph.removeGitRepository`: Git Graph: Remove Git Repository... _(used to remove repositories from Git Graph)_
-* `git-graph.resumeWorkspaceCodeReview`: Git Graph: Resume a specific Code Review in Workspace... _(used to open the Git Graph View to a Code Review that is already in progress)_
-* `git-graph.version`: Git Graph: Get Version Information
+### 提交详情与对比
 
-## Release Notes
+- 点开任意提交查看提交信息、作者、文件改动列表
+- 点一个提交后再 `CTRL/CMD` 点另一个，即可对比两次提交
+- 文件改动支持树形与列表两种展示方式，可切换是否压缩单层文件夹
+- 可以把某次提交涉及的文件恢复到该版本
+- 提交信息和标签详情中的 HTTP/HTTPS 链接可直接点开
+- 代码评审（Code Review）：记录哪些文件已看过，未看的加粗，看过即取消加粗；30 天无活动自动结束
 
-Detailed Release Notes are available [here](CHANGELOG.md).
+### 仓库设置组件
 
-## Visual Studio Marketplace
+- 查看、添加、修改、删除、抓取、清理远程
+- Issue 链接：把提交信息里的 issue 编号变成跳转链接
+- Pull Request 创建：内置 Bitbucket、GitHub、GitLab，也可用 `git-graph.customPullRequestProviders` 配置自建服务
+- 把当前仓库的 Git Graph 配置导出成文件，提交到仓库后其他人可共享同一套设置
 
-This extension is available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph) for Visual Studio Code.
+### 键盘快捷键
 
-## Acknowledgements
+| 快捷键 | 作用 |
+|---|---|
+| `CTRL/CMD + F` | 打开查找组件 |
+| `CTRL/CMD + H` | 视图滚动到 HEAD 对应的提交 |
+| `CTRL/CMD + R` | 刷新 |
+| `CTRL/CMD + S` | 滚动到第一个（下一个）Stash |
+| `CTRL/CMD + SHIFT + S` | 滚动到最后一个（上一个）Stash |
+| `Up` / `Down` | 提交详情打开时，在上一个 / 下一个提交上打开详情 |
+| `CTRL/CMD + Up` / `Down` | 在同分支的父 / 子提交上打开详情；加 `SHIFT` 时遇到分支或合并会走另一条分支 |
+| `Enter` | 提交对话框的主操作 |
+| `Escape` | 关闭对话框、右键菜单或提交详情 |
 
-Thank you to all of the contributors that help with the development of Git Graph!
+这些快捷键都可以在配置里改。
 
-Some of the icons used in Git Graph are from the following sources, please support them for their excellent work!
-- [GitHub Octicons](https://octicons.github.com/) ([License](https://github.com/primer/octicons/blob/master/LICENSE))
-- [Icons8](https://icons8.com/icon/pack/free-icons/ios11) ([License](https://icons8.com/license))
+## 工作原理
+
+```
+浏览器 ──HTTP──────▶  本地服务 (127.0.0.1:7583)
+   │                    ├─ 托管 media/out.min.js、out.min.css 与静态资源
+   └──WebSocket────▶    ├─ 承载原插件的 GG.RequestMessage 协议
+                        └─ 调用 src/ 的业务逻辑 ──child_process──▶ git
+```
+
+适配层替换了原插件依赖的这些 VS Code 能力：
+
+| VS Code API | 独立版实现 |
+|---|---|
+| `WebviewPanel` | 浏览器标签页（HTTP + WebSocket） |
+| `workspace.getConfiguration` | `package.json` 里的默认值 + `settings.json` 用户配置 |
+| `Memento`（globalState / workspaceState） | 数据目录下的 `<name>.json` |
+| `FileSystemWatcher` | `fs.watch`（递归），忽略 `node_modules`、`.git/objects` 等 |
+| `env.clipboard` | `clip` / `pbcopy` / `xclip` |
+| `vscode.open` | 系统默认程序打开文件 |
+| `vscode.diff` | 服务生成的差异页（`/diff/<id>`） |
+| `window.createTerminal` | 系统终端，工作目录为当前仓库 |
+
+前端只做两处运行时注入，不改源码：
+
+- `standalone/assets/bridge.js`：实现 `acquireVsCodeApi()`，把 `postMessage` 转成 WebSocket
+- `standalone/assets/theme.css`：补齐 `--vscode-*` 主题变量
+
+## 快速开始
+
+### 前置条件
+
+- Node.js **≥ 18**
+- Git 在 `PATH` 中（或设置 `git.path`）
+
+### 方式一：用发布包
+
+从 [Releases](../../releases) 下载 `git-graph-standalone-v*.zip`，解压后：
+
+```bash
+./start.sh          # macOS / Linux
+start.bat           # Windows
+```
+
+发布包内已经带了运行所需的依赖，不需要 `npm install`。
+
+### 方式二：从源码运行
+
+```bash
+cd standalone
+npm install         # 只装 typescript / uglify-js / @types，不含 Electron
+npm run build       # 编译 src + web，产出 standalone/out 与 media/out.min.js
+npm start           # 启动并自动打开浏览器
+```
+
+`npm run dev` 等于「构建 + 启动」，改完代码直接用它。
+
+启动成功后控制台输出：
+
+```
+  Git Graph is running at http://127.0.0.1:7583
+  Press Ctrl+C to stop.
+```
+
+## 仓库管理
+
+**启动时不需要带任何参数。** 如果没有可显示的仓库，访问 `http://127.0.0.1:7583` 会自动跳到选择页 `/repos`：
+
+- **已添加的仓库**：点「打开」进入图形界面，点「移除」把它从列表里删掉
+- **浏览目录**：从扫描目录或磁盘根开始逐级浏览，带 `git` 徽章的目录可一键添加
+- **直接输入路径**：粘贴 `D:/work/project` 这类路径
+- **扫描目录**：添加一个要扫描的目录，点「立即扫描」自动发现其下（默认一层）的仓库
+
+改动会写回 `settings.json` 的 `repos`，下次启动无需再选；已经打开的图形界面标签页会自动刷新。
+
+「移除」只是从列表中摘掉，**不会删除磁盘上的任何文件**。被移除的仓库会记进 `workspaceState.json` 的 `ignoredRepos`，所以随后的目录扫描不会把它自动加回来；手动添加同一目录即可恢复。
+
+图形界面右下角有个固定的 **「＋ 仓库」** 按钮，随时可以回到选择页。
+
+## 命令行参数
+
+| 参数 | 说明 |
+|---|---|
+| `-r, --repo <path>` | 预先添加仓库，可重复 |
+| `--root <path>` | 添加扫描目录，可重复 |
+| `-p, --port <port>` | 首选端口，默认 `7583`；被占用时自动顺延 |
+| `--data-dir <path>` | 数据目录，默认 `standalone/data` |
+| `--no-open` | 不自动打开浏览器，只打印地址 |
+| `-h, --help` | 显示帮助 |
+
+```bash
+node out/standalone/src/main.js --port 8080 --no-open --repo D:/work/my-project
+```
+
+环境变量 `GG_EXTENSION_PATH` 可以显式指定「包含 `package.json`、`media`、`resources` 的目录」。
+
+## 配置文件
+
+数据目录默认是 `standalone/data/`，可用 `--data-dir` 改：
+
+| 文件 | 内容 |
+|---|---|
+| `settings.json` | 仓库列表、扫描目录、`git-graph.*` 配置 |
+| `workspaceState.json` | 各仓库的界面状态、被忽略的仓库 |
+| `globalState.json` | 全局状态（如缓存的 Git 版本信息） |
+| `logs/` | 运行日志 |
+
+`settings.json` 的结构：
+
+```json
+{
+	"workspaceRoots": ["D:/work"],
+	"repos": ["D:/work/my-project"],
+	"config": {
+		"git-graph.date.format": "Date & Time",
+		"git-graph.repository.commits.initialLoad": 300,
+		"git-graph.graph.style": "rounded"
+	}
+}
+```
+
+`config` 里的键就是界面上的全部设置项，**默认值来自根 `package.json` 的 `contributes.configuration`**（这也是该字段被保留下来的原因）。常用几项：
+
+| 键 | 默认值 | 说明 |
+|---|---|---|
+| `git-graph.repository.commits.initialLoad` | `300` | 首次加载的提交数 |
+| `git-graph.repository.commits.loadMore` | `100` | 每次「加载更多」的条数 |
+| `git-graph.repository.commits.order` | `date` | 提交排序：`date` / `author-date` / `topo` |
+| `git-graph.date.format` | `Date & Time` | 日期格式，另有 `Date Only`、`ISO Date & Time`、`ISO Date Only`、`Relative` |
+| `git-graph.graph.style` | `rounded` | 连线风格：`rounded` / `angular` |
+| `git-graph.graph.colours` | 12 色数组 | 分支配色 |
+| `git-graph.fileEncoding` | `utf8` | 读取历史文件时的编码 |
+| `git-graph.maxDepthOfRepoSearch` | `0` | 扫描仓库时的子目录深度 |
+| `git-graph.repository.fetchAvatars` | `false` | 是否拉取作者头像（会把邮箱发给 GitHub / GitLab / Gravatar） |
+| `git-graph.integratedTerminalShell` | 空 | 打开终端时使用的 Shell 路径 |
+
+完整清单见根目录 `package.json` 的 `contributes.configuration`。想重置所有状态，直接删掉数据目录即可。
+
+## 查看文件差异
+
+在提交详情或对比视图里点击文件，会在新标签页打开差异页：
+
+- 支持**并排**与**统一**两种视图，纯 CSS 切换，不依赖脚本
+- 行对齐由 `git diff --no-index` 计算，与 `git diff` 结果一致
+- 文件内容通过 `DataSource` 读取，遵循 `git-graph.fileEncoding` 配置的编码
+- 只发生换行符（CRLF / LF）差异时会提示「未检测到差异」，而不是显示一张空表
+
+## 构建与发版
+
+```bash
+cd standalone
+npm run build       # 编译后端 + 打包前端，产出 out/ 与 ../media/out.min.js
+```
+
+打 tag 即触发 GitHub Actions（`.github/workflows/standalone-release.yml`）：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+CI 会构建、组装发布包（含运行时依赖）、打成 zip 并挂到 Release 上。也可以在 Actions 页面手动 `workflow_dispatch`。
+
+## 目录结构
+
+```
+.
+├── src/                    # 原插件后端（未改动）
+├── web/                    # 原插件前端（未改动）
+├── media/                  # 前端构建产物（out.min.js / out.min.css，不提交）
+├── resources/              # 图标等静态资源
+├── standalone/             # 独立版全部新增代码
+│   ├── src/
+│   │   ├── adapter/        # vscode API 适配层（核心）
+│   │   ├── server.ts       # HTTP + WebSocket 服务
+│   │   ├── main.ts         # 启动、参数、配置持久化
+│   │   ├── diff.ts         # 差异页渲染
+│   │   ├── repoApi.ts      # 仓库管理 API
+│   │   └── repoPicker.ts   # /repos 选择页
+│   ├── assets/             # 浏览器端桥接脚本与主题变量
+│   ├── packaging/          # start.bat / start.sh
+│   ├── build.js            # 构建脚本
+│   └── data/               # 运行时数据（不提交）
+├── tests/                  # 原插件单元测试
+└── .github/workflows/      # 发版流程
+```
+
+## 已知限制
+
+| 项目 | 现状 |
+|---|---|
+| 打开文件 | 调用系统默认程序，而不是编辑器内打开 |
+| 差异高亮 | 只有增删配色，没有语法高亮 |
+| 删除仓库 | 只能在 `/repos` 选择页操作 |
+| Git 凭据输入（askpass） | 未接入，私有仓库操作依赖系统凭据管理器 |
+| 归档导出（Create Archive） | 不支持，原实现依赖 VS Code 的保存对话框 |
+| 终端 | 打开系统终端，不是编辑器内嵌终端 |
+| 多仓库 | 仓库下拉排序中的 `Workspace Full Path` 退化为按路径排序 |
+
+## 常见问题
+
+**端口被占用？** 服务会自动尝试 `7583` 之后的端口，控制台日志里有实际地址；也可以用 `--port` 指定。
+
+**页面白屏？** 说明 `media/out.min.js` 没被正确提供。确认 `media/` 目录存在（从源码跑时先执行 `npm run build`），以及启动日志里 `Extension path:` 指向的是仓库根。
+
+**提示找不到 Git？** 把 Git 加到 `PATH`，或在 `settings.json` 的 `config` 里设置 `git.path`。
+
+**macOS / Linux 上 `start.sh` 不能执行？** `chmod +x start.sh`。
+
+**数据存到哪了？** 默认 `standalone/data/`，日志在同名子目录 `logs/`。删掉整个目录即可重置。
+
+## 许可与致谢
+
+本项目基于 [mhutchie/vscode-git-graph](https://github.com/mhutchie/vscode-git-graph)（MIT），保留原仓库的 `LICENSE` 与署名。原项目的 `src/` 与 `web/` 未做修改，新增部分集中在 `standalone/`。
+
+图标来源：
+
+- [GitHub Octicons](https://octicons.github.com/)（[License](https://github.com/primer/octicons/blob/master/LICENSE)）
+- [Icons8](https://icons8.com/icon/pack/free-icons/ios11)（[License](https://icons8.com/license)）
