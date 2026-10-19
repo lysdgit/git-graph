@@ -15,6 +15,14 @@
 		"action"
 	],
 	"license": "SEE LICENSE IN 'LICENSE'",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lysdgit/git-graph.git"
+	},
+	"homepage": "https://github.com/lysdgit/git-graph#readme",
+	"bugs": {
+		"url": "https://github.com/lysdgit/git-graph/issues"
+	},
 	"contributes": {
 		"configuration": {
 			"type": "object",

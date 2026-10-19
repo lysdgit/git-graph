@@ -6,6 +6,8 @@
 
 > 原项目的 `src/`（数据层与业务逻辑）和 `web/`（前端）**没有任何改动**，本仓库通过 `standalone/src/adapter/` 顶替 `vscode` 模块，让同一份业务代码跑在普通 Node 进程里。
 
+**仓库地址**：<https://github.com/lysdgit/git-graph>　｜　**问题反馈**：<https://github.com/lysdgit/git-graph/issues>
+
 ## 目录
 
 - [功能](#功能)
