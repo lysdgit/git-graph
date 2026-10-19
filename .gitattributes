@@ -1,0 +1,15 @@
+# Normalise line endings so the repository behaves the same on every platform.
+# Windows batch files are the only exception: cmd.exe wants CRLF.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.zip binary
